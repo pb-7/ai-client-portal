@@ -41,7 +41,7 @@ export function UpdatePasswordForm() {
         return;
       }
 
-      router.replace("/account");
+      router.replace("/portal");
       router.refresh();
     } catch {
       setError("Unable to update your password right now. Please try again.");

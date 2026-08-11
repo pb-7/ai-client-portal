@@ -25,7 +25,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       .maybeSingle();
 
     if (profile) {
-      redirect("/account");
+      redirect("/portal");
     }
 
     accountUnavailable = true;
@@ -35,9 +35,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <AuthShell
-      eyebrow="Client access"
+      eyebrow="Advisor portal"
       title="Welcome back"
-      description="Sign in with the email address associated with your account."
+      description="Sign in with your administrator or advisor account."
     >
       <LoginForm
         accountUnavailable={accountUnavailable}
