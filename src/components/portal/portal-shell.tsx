@@ -7,13 +7,20 @@ import type { AppRole } from "@/types/portal";
 
 type PortalShellProps = {
   children: ReactNode;
+  displayName: string | null;
   email: string;
   role: AppRole;
 };
 
-export function PortalShell({ children, email, role }: PortalShellProps) {
+export function PortalShell({
+  children,
+  displayName,
+  email,
+  role,
+}: PortalShellProps) {
   const roleLabel = role === "admin" ? "Administrator" : "Advisor";
   const dashboardPath = portalPathForRole(role);
+  const accountLabel = displayName ?? email;
 
   return (
     <div className="min-h-screen bg-[#f5f5f2] text-brand-black">
@@ -39,7 +46,7 @@ export function PortalShell({ children, email, role }: PortalShellProps) {
 
           <div className="flex min-w-0 items-center gap-3 sm:gap-5">
             <div className="hidden min-w-0 text-right sm:block">
-              <p className="truncate text-sm font-bold">{email}</p>
+              <p className="truncate text-sm font-bold">{accountLabel}</p>
               <p className="mt-0.5 text-xs text-black/50">{roleLabel}</p>
             </div>
             <LogoutButton />
@@ -75,7 +82,7 @@ export function PortalShell({ children, email, role }: PortalShellProps) {
 
           <div className="mt-4 flex items-center justify-between border-t border-black/10 pt-4 sm:hidden">
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold">{email}</p>
+              <p className="truncate text-sm font-bold">{accountLabel}</p>
               <p className="mt-0.5 text-xs text-black/50">{roleLabel}</p>
             </div>
           </div>

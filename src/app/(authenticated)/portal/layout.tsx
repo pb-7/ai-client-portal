@@ -7,7 +7,11 @@ export default async function PortalLayout({ children }: { children: ReactNode }
   const { email, profile } = await requireAuthenticatedProfile();
 
   return (
-    <PortalShell email={email} role={profile.role}>
+    <PortalShell
+      displayName={profile.display_name}
+      email={email}
+      role={profile.role}
+    >
       {children}
     </PortalShell>
   );

@@ -3,12 +3,16 @@ import { SummaryCard } from "@/components/portal/summary-card";
 import { requireRole } from "@/lib/auth/session";
 import type { AdvisorProfile, ClientSummary } from "@/types/portal";
 
+function getAdvisorDisplayName(advisor: AdvisorProfile) {
+  return advisor.display_name?.trim() || "Unnamed advisor";
+}
+
 export default async function AdminDashboardPage() {
   const { supabase } = await requireRole("admin");
   const [advisorResult, clientResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, disabled, created_at")
+      .select("id, display_name, disabled, created_at")
       .eq("role", "advisor")
       .order("created_at", { ascending: true }),
     supabase
@@ -24,7 +28,7 @@ export default async function AdminDashboardPage() {
     (client) => client.status === "active",
   ).length;
   const advisorLabels = new Map(
-    advisors.map((advisor, index) => [advisor.id, `Advisor ${index + 1}`]),
+    advisors.map((advisor) => [advisor.id, getAdvisorDisplayName(advisor)]),
   );
 
   return (
@@ -86,6 +90,7 @@ export default async function AdminDashboardPage() {
               const assignedCount = clients.filter(
                 (client) => client.advisor_id === advisor.id,
               ).length;
+              const displayName = getAdvisorDisplayName(advisor);
 
               return (
                 <article
@@ -97,9 +102,9 @@ export default async function AdminDashboardPage() {
                       A{index + 1}
                     </span>
                     <div className="min-w-0">
-                      <h3 className="font-bold">Advisor {index + 1}</h3>
-                      <p className="mt-1 truncate font-mono text-xs text-black/45">
-                        Profile {advisor.id.slice(0, 8)}…
+                      <h3 className="truncate font-bold">{displayName}</h3>
+                      <p className="mt-1 text-xs text-black/45">
+                        Advisor account
                       </p>
                     </div>
                   </div>

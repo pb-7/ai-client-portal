@@ -26,7 +26,7 @@ export const requireAuthenticatedProfile = cache(async () => {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, role, disabled")
+    .select("id, role, disabled, display_name")
     .eq("id", userId)
     .eq("disabled", false)
     .maybeSingle();
@@ -43,6 +43,7 @@ export const requireAuthenticatedProfile = cache(async () => {
   const emailClaim = claimsData?.claims.email;
   const authenticatedProfile: AuthenticatedProfile = {
     disabled: false,
+    display_name: profile.display_name?.trim() || null,
     id: profile.id,
     role: profile.role,
   };
