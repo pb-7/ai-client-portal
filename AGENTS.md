@@ -20,12 +20,15 @@ Everything below describes implementation choices intended to demonstrate produc
 
 ## Implementation vision (enhancement)
 
-This implementation intentionally expands the required password-protected webpage into a reusable AI-powered client portal. This is an implementation choice—not an additional assessment requirement—intended to demonstrate software engineering, AI engineering, security, scalability, maintainability, and production-oriented architecture.
+This implementation intentionally expands the required password-protected webpage into a reusable AI-powered advisor portal. This is an implementation enhancement—not an additional assessment requirement—intended to demonstrate software engineering, AI engineering, security, scalability, maintainability, and production-oriented architecture.
 
-The portal supports multiple client households with complete tenant isolation and two roles:
+Only internal application users authenticate through Supabase. The initial account model is one admin and three advisors:
 
-- **Admin:** Authenticates; manages clients, access, and structured financial inputs; generates and reviews AI drafts; previews the client experience; and publishes an approved version.
-- **Client:** Authenticates, resets a password when needed, accesses only authorized household information, and views the published personalized webpage.
+- **Admin:** Can view all advisors and clients, manage the internal user model, and reassign clients between advisors.
+- **Advisor:** Can view and manage only assigned clients, create and edit those client records and structured inputs, initiate client-page generation, review and preview drafts, and publish approved versions.
+- **Client:** Is not an application user and receives no Supabase Auth account. A client accesses a published page through a client-specific URL protected by a separate password gate.
+
+Each client is assigned to exactly one advisor for the assessment MVP. Future multi-advisor support may introduce a many-to-many assignment model, but must not be implemented for the MVP.
 
 ## Architecture
 
@@ -37,7 +40,7 @@ Structured client information
   → LLM
   → structured AI output
   → validation
-  → admin review
+  → advisor review
   → preview
   → publish
   → client experience
@@ -55,7 +58,7 @@ Structured client information
 Supabase is the authentication and database platform.
 
 - No public registration.
-- Admin-managed client accounts.
+- Admin-managed advisor accounts.
 - Email/password authentication and password reset.
 - Disabled accounts must lose access.
 - Server-side authorization.
@@ -64,11 +67,14 @@ Supabase is the authentication and database platform.
 - Never expose service-role credentials.
 - MFA is outside MVP scope; document it only as a future production enhancement.
 
-Membership model:
+MVP application-access model:
 
 ```text
-Auth User → Profile → Membership → Client Household
+Auth User → Profile (admin or advisor)
+Advisor Profile ← Client assignment (exactly one advisor per client)
 ```
+
+Admin policies permit access across advisors and clients. Advisor policies permit access only to clients assigned to the current advisor. The client-page password gate is separate from Supabase authentication and must not create a client application session.
 
 ### Planned data model
 
@@ -76,10 +82,12 @@ Expected core tables:
 
 - `profiles`
 - `clients`
-- `memberships`
 - `client_inputs`
 - `narratives`
 - `narrative_versions`
+- `client_page_access`
+
+The target schema assigns each `clients` row to exactly one advisor profile and keeps client-page password access separate from application authentication. The existing migration still contains the earlier admin/client role and membership model and must be revised in a follow-up migration before the admin portal is built.
 
 Authentication credentials remain in Supabase Auth.
 
@@ -148,13 +156,16 @@ Completed:
 - Supabase packages and reusable client utilities
 - Environment configuration
 - Temporary connectivity verification
+- Initial database schema and RLS foundation based on the earlier role/membership model
+- Authentication foundation
 
 Not yet implemented:
 
-- Database schema and RLS policies
-- Authentication UI
+- Follow-up migration replacing the earlier client-user/membership model with admin/advisor roles and one-advisor-per-client assignment
 - Admin dashboard
+- Advisor management and client assignment
 - Client management
+- Separate client-page password gate
 - AI generation workflow
 - Review and publication workflow
 - Deployment
