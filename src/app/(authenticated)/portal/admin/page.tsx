@@ -1,9 +1,9 @@
 import Link from "next/link";
 
+import { BrowserLocalDateTime } from "@/components/portal/browser-local-date-time";
 import { StatusBadge } from "@/components/portal/status-badge";
 import { SummaryCard } from "@/components/portal/summary-card";
 import { requireRole } from "@/lib/auth/session";
-import { formatPortalDateTime } from "@/lib/format/date";
 import type { AdvisorProfile, ClientSummary } from "@/types/portal";
 
 function getAdvisorDisplayName(advisor: AdvisorProfile) {
@@ -209,9 +209,7 @@ export default async function AdminDashboardPage({
                         : "Unassigned"}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-black/60">
-                      <time dateTime={client.updated_at}>
-                        {formatPortalDateTime(client.updated_at)}
-                      </time>
+                      <BrowserLocalDateTime value={client.updated_at} />
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link
