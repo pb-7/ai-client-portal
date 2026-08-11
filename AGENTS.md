@@ -22,10 +22,10 @@ Everything below describes implementation choices intended to demonstrate produc
 
 This implementation intentionally expands the required password-protected webpage into a reusable AI-powered advisor portal. This is an implementation enhancement—not an additional assessment requirement—intended to demonstrate software engineering, AI engineering, security, scalability, maintainability, and production-oriented architecture.
 
-Only internal application users authenticate through Supabase. The initial account model is one admin and three advisors:
+Only internal application users authenticate through Supabase. The initial MVP has one admin account, three advisor accounts, and six fictional client records, with two clients assigned to each advisor:
 
-- **Admin:** Can view all advisors and clients, manage the internal user model, and reassign clients between advisors.
-- **Advisor:** Can view and manage only assigned clients, create and edit those client records and structured inputs, initiate client-page generation, review and preview drafts, and publish approved versions.
+- **Admin:** Can view all advisors and clients, enable or disable advisor access, see each client's assigned advisor, and reassign clients between advisors.
+- **Advisor:** Authenticates; views only assigned clients; creates clients; edits and saves structured client details; generates AI drafts; reviews and previews results; and publishes approved client-facing pages.
 - **Client:** Is not an application user and receives no Supabase Auth account. A client accesses a published page through a client-specific URL protected by a separate password gate.
 
 Each client is assigned to exactly one advisor for the assessment MVP. Future multi-advisor support may introduce a many-to-many assignment model, but must not be implemented for the MVP.
@@ -35,10 +35,10 @@ Each client is assigned to exactly one advisor for the assessment MVP. Future mu
 ### AI lifecycle
 
 ```text
-Structured client information
+Save structured client data
   → server-side prompt construction
-  → LLM
-  → structured AI output
+  → Claude
+  → structured narrative output
   → validation
   → advisor review
   → preview
@@ -46,12 +46,15 @@ Structured client information
   → client experience
 ```
 
-- Treat AI output as a draft; require human approval before client-facing publication whenever practical.
-- AI generates content, not security logic, authorization, branding, or disclosures.
+- Use stored structured client data as the source of truth for all factual values.
+- Claude generates only narrative content from the stored structured data, and its output remains a draft until approved.
+- AI generates narrative content, not factual values, security logic, authorization, branding, or disclosures.
 - Keep branding, authorization, and required disclosure deterministic.
 - Validate structured inputs and structured model output.
 - Application security must never depend on AI output.
 - All AI calls occur server-side.
+
+The publication workflow is **Save Data → Generate Draft → Review → Preview → Publish**. The final client page combines factual database values, the approved Claude narrative, fixed branding, and the fixed required disclosure.
 
 ### Authentication and authorization
 
@@ -74,7 +77,7 @@ Auth User → Profile (admin or advisor)
 Advisor Profile ← Client assignment (exactly one advisor per client)
 ```
 
-Admin policies permit access across advisors and clients. Advisor policies permit access only to clients assigned to the current advisor. The client-page password gate is separate from Supabase authentication and must not create a client application session.
+Admin policies permit access across advisors and clients, including advisor access management and client reassignment. Advisor policies permit access only to clients assigned to the current advisor. Every published client page receives its own protected URL/password gate. This gate is separate from Supabase authentication and must not create a client application session.
 
 ### Planned data model
 
@@ -87,7 +90,7 @@ Expected core tables:
 - `narrative_versions`
 - `client_page_access`
 
-The target schema assigns each `clients` row to exactly one advisor profile and keeps client-page password access separate from application authentication. The existing migration still contains the earlier admin/client role and membership model and must be revised in a follow-up migration before the admin portal is built.
+The target schema assigns each `clients` row to exactly one advisor profile and keeps client-page password access separate from application authentication. The original migration contains the earlier admin/client role and membership model; the advisor ownership follow-up migration `20260810000200_advisor_ownership.sql` has been successfully applied to the linked remote Supabase project.
 
 Authentication credentials remain in Supabase Auth.
 
@@ -99,7 +102,7 @@ Authentication credentials remain in Supabase Auth.
 - Supabase Auth and PostgreSQL
 - Supabase RLS
 - Vercel
-- OpenAI and/or Anthropic APIs
+- Anthropic Claude API
 - GitHub
 
 ## Branding and disclosure
@@ -157,13 +160,13 @@ Completed:
 - Environment configuration
 - Temporary connectivity verification
 - Initial database schema and RLS foundation based on the earlier role/membership model
+- Advisor ownership follow-up migration `20260810000200_advisor_ownership.sql` successfully applied to the linked remote Supabase project
 - Authentication foundation
 
 Not yet implemented:
 
-- Follow-up migration replacing the earlier client-user/membership model with admin/advisor roles and one-advisor-per-client assignment
 - Admin dashboard
-- Advisor management and client assignment
+- Advisor management and initial assignment of six fictional clients, two per advisor
 - Client management
 - Separate client-page password gate
 - AI generation workflow

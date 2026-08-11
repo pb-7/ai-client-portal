@@ -2,7 +2,7 @@
 
 ## System overview
 
-This take-home is a single Next.js application deployed to Vercel, with Supabase providing PostgreSQL and email/password authentication for internal users. The authenticated application roles are admin and advisor. One household/client record represents one client, and each client is assigned to exactly one advisor for the MVP. Supabase Row Level Security (RLS) is the authoritative authorization boundary for the authenticated application.
+This take-home is a single Next.js application deployed to Vercel, with Supabase providing PostgreSQL and email/password authentication for internal users. The authenticated application roles are admin and advisor. The initial MVP has one admin account, three advisor accounts, and six fictional client records, with two clients assigned to each advisor. Each client is assigned to exactly one advisor, and Supabase Row Level Security (RLS) is the authoritative authorization boundary for the authenticated application.
 
 Clients are not application users. A published client page is shared through a client-specific URL protected by a password gate that is separate from advisor/admin Supabase authentication.
 
@@ -12,8 +12,8 @@ Only fictional assessment data will be stored. Local development and production 
 
 ## User roles
 
-- **Admin:** The initial system has one admin. The admin can view all advisors and clients and reassign clients between advisors.
-- **Advisor:** The initial system has three advisors. Advisors can create and edit client records, manage structured client inputs, initiate client-page generation, and review, preview, and publish pages only for clients assigned to them.
+- **Admin:** The initial system has one admin. The admin can view all advisors and clients, enable or disable advisor access, see which advisor owns each client, and reassign clients between advisors.
+- **Advisor:** The initial system has three advisors. Advisors authenticate, view only assigned clients, create clients, edit and save structured client details, generate AI drafts, review and preview results, and publish client-facing pages.
 - **Client:** Not an authenticated application role. Clients receive no application account and access only a password-gated published page at a client-specific URL.
 
 Access is derived from the authenticated profile and the client row's advisor assignment rather than from a role or client identifier supplied by the browser. Disabled admin or advisor users must lose application access. Each client has exactly one advisor in the MVP; a many-to-many assignment model is a future option and must not be implemented for the assessment MVP.
@@ -24,22 +24,26 @@ Access is derived from the authenticated profile and the client row's advisor as
 
 1. Sign in with an advisor account.
 2. Create or edit an assigned client record.
-3. Enter or update structured, fictional client inputs.
-4. Initiate an AI-generated narrative draft.
-5. Review and preview the complete branded result with its required disclosure.
-6. Publish the approved narrative for the client.
+3. Enter or update structured, fictional client details and save them to the database.
+4. Generate a Claude narrative draft from the stored structured data.
+5. Review the generated narrative.
+6. Preview the complete client page.
+7. Publish the approved client-facing page.
 
 ### Admin
 
 1. Sign in with the admin account.
 2. View all advisors and clients.
-3. Reassign a client from one advisor to another.
+3. Enable or disable advisor access.
+4. See the advisor assigned to each client.
+5. Reassign a client from one advisor to another.
 
 ### Client page access
 
-1. An advisor shares the published client-specific URL and its page password through an appropriate channel.
-2. The client submits the page password through a gate separate from Supabase Auth.
-3. After successful validation, the client can view only that client's published page; no application account or Supabase Auth session is created.
+1. Publishing creates a protected client-specific URL/password gate.
+2. An advisor shares the URL and page password through an appropriate channel.
+3. The client submits the page password through a gate separate from Supabase Auth.
+4. After successful validation, the client can view only that client's published page; no application account or Supabase Auth session is created.
 
 ### Account administration
 
@@ -61,7 +65,7 @@ Access is derived from the authenticated profile and the client row's advisor as
 
 Authentication credentials for admins and advisors remain in Supabase Auth and are not duplicated in application tables. Clients have no Auth users. All client-owned tables include a non-null client identifier. The client-page access mechanism is modeled separately from application authentication and must store no plaintext page password. A production implementation should also include append-only audit events; for the assessment, lifecycle timestamps and reviewer/publisher identifiers provide the minimum traceability.
 
-The existing migration implements the superseded admin/client role and membership model. A follow-up migration must convert it to admin/advisor roles and enforce one advisor per client before the admin portal is built. Supporting multiple advisors per client later would justify a dedicated many-to-many assignment table; that flexibility is intentionally deferred.
+The original migration implements the superseded admin/client role and membership model. The advisor ownership follow-up migration `20260810000200_advisor_ownership.sql` has been successfully applied to the linked remote Supabase project. Supporting multiple advisors per client later would justify a dedicated many-to-many assignment table; that flexibility is intentionally deferred.
 
 ## Authentication and authorization
 
@@ -79,18 +83,18 @@ Route protection and server-side role checks improve usability and defense in de
 
 ## AI generation lifecycle
 
-1. The assigned advisor saves validated, structured client inputs.
-2. A server-only action or API route loads authorized inputs and calls the AI provider. No provider credentials or AI calls are exposed to the browser.
-3. The model receives structured inputs and is required to return validated JSON narrative fields.
+1. The assigned advisor saves validated, structured client data to the database. This stored data is the source of truth for factual values.
+2. A server-only action or API route loads authorized inputs and calls Claude. No provider credentials or AI calls are exposed to the browser.
+3. Claude receives the stored structured inputs and returns only structured JSON narrative fields; it does not generate or alter factual values.
 4. The server rejects output that does not match the expected schema and stores a new draft version with generation metadata.
 5. The advisor reviews the draft.
 6. The advisor previews the complete client page.
 7. The advisor explicitly publishes an approved version.
 8. The client can access only the published version through the client-specific password gate.
 
-The required workflow remains **Generate Draft → Review → Preview → Publish**.
+The required workflow is **Save Data → Generate Draft → Review → Preview → Publish**.
 
-Branding, labels, layout, and the required disclosure are deterministic application content. They are never requested from, editable by, or generated by the model.
+The final client page combines factual database values, the approved Claude narrative, fixed branding, and the fixed required disclosure. Branding, labels, layout, and the required disclosure are deterministic application content. They are never requested from, editable by, or generated by Claude.
 
 ## Security decisions
 
@@ -109,12 +113,12 @@ Branding, labels, layout, and the required disclosure are deterministic applicat
 
 ## Implementation sequence
 
-1. Add a follow-up migration that replaces the existing admin/client role and membership assumptions with admin/advisor roles and one required advisor assignment per client.
-2. Update and verify RLS for admin-wide access, advisor assignment isolation, unauthenticated denial, and disabled-user behavior.
+1. Verify the applied advisor ownership migration's admin/advisor role conversion and one-advisor-per-client constraint.
+2. Verify RLS for admin-wide access, advisor assignment isolation, unauthenticated denial, and disabled-user behavior.
 3. Adapt the existing authentication foundation for admin/advisor role-aware routing.
 4. Implement admin advisor visibility and client reassignment.
 5. Implement advisor-scoped client creation, editing, and structured inputs.
-6. Implement server-only structured AI generation, schema validation, version storage, and the **Generate Draft → Review → Preview → Publish** lifecycle.
+6. Implement server-only Claude narrative generation, schema validation, version storage, and the **Save Data → Generate Draft → Review → Preview → Publish** lifecycle.
 7. Implement the separate client-specific URL and password gate for published pages.
 8. Document production hardening steps, including MFA, staging isolation, expanded audit logging, stronger session controls, and optional future multi-advisor assignments.
 9. Complete end-to-end authorization and page-access verification, deploy to Vercel and Supabase free tiers, and document staging as the next production-hardening step.
