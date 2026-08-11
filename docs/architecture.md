@@ -67,6 +67,11 @@ Authentication credentials for admins and advisors remain in Supabase Auth and a
 
 The original migration implements the superseded admin/client role and membership model. The advisor ownership follow-up migration `20260810000200_advisor_ownership.sql` has been successfully applied to the linked remote Supabase project. Supporting multiple advisors per client later would justify a dedicated many-to-many assignment table; that flexibility is intentionally deferred.
 
+Migrations through `20260811000500_client_page_publications.sql` have been
+applied to the linked remote Supabase project. The forward-only correction
+`20260811000600_fix_publication_timestamp.sql` must be applied before production
+publishing is tested or deployed.
+
 ## Authentication and authorization
 
 - Supabase Auth provides email/password sign-in and password reset.

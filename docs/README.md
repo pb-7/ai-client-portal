@@ -1,3 +1,4 @@
 # Project documentation
 
-Architecture notes and decision records will live here as portal capabilities are designed and approved.
+- [`architecture.md`](architecture.md): MVP architecture, authorization model,
+  AI lifecycle, publication boundary, and production recommendations.

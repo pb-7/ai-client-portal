@@ -88,7 +88,7 @@ Expected core tables:
 - `client_inputs`
 - `narratives`
 - `narrative_versions`
-- `client_page_access`
+- `client_page_publications`
 
 The target schema assigns each `clients` row to exactly one advisor profile and keeps client-page password access separate from application authentication. The original migration contains the earlier admin/client role and membership model; the advisor ownership follow-up migration `20260810000200_advisor_ownership.sql` has been successfully applied to the linked remote Supabase project.
 
@@ -158,20 +158,17 @@ Completed:
 - Architecture documentation
 - Supabase packages and reusable client utilities
 - Environment configuration
-- Temporary connectivity verification
-- Initial database schema and RLS foundation based on the earlier role/membership model
-- Advisor ownership follow-up migration `20260810000200_advisor_ownership.sql` successfully applied to the linked remote Supabase project
-- Authentication foundation
+- Database schema, advisor ownership, soft deletion, and RLS foundations
+- Admin/advisor authentication, password reset, and role-aware portal
+- Client management and structured financial inputs
+- Server-side Claude narrative generation, review, and immutable version history
+- Password-protected client-page publication, unpublication, and client logout
+- Migrations through `20260811000500_client_page_publications.sql` applied to the linked remote Supabase project
 
 Not yet implemented:
 
-- Admin dashboard
-- Advisor management and initial assignment of six fictional clients, two per advisor
-- Client management
-- Separate client-page password gate
-- AI generation workflow
-- Review and publication workflow
-- Deployment
+- Apply `20260811000600_fix_publication_timestamp.sql` to the linked remote Supabase project
+- Final production configuration and deployment
 
 ## Expected final deliverables
 
