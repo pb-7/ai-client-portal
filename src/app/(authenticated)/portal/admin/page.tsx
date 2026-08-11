@@ -3,6 +3,7 @@ import Link from "next/link";
 import { StatusBadge } from "@/components/portal/status-badge";
 import { SummaryCard } from "@/components/portal/summary-card";
 import { requireRole } from "@/lib/auth/session";
+import { formatPortalDateTime } from "@/lib/format/date";
 import type { AdvisorProfile, ClientSummary } from "@/types/portal";
 
 function getAdvisorDisplayName(advisor: AdvisorProfile) {
@@ -171,7 +172,7 @@ export default async function AdminDashboardPage({
 
         {clients.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
+            <table className="w-full min-w-[940px] text-left text-sm">
               <thead className="bg-black/[0.025] text-xs uppercase tracking-[0.12em] text-black/45">
                 <tr>
                   <th scope="col" className="px-6 py-3 font-bold">
@@ -182,6 +183,9 @@ export default async function AdminDashboardPage({
                   </th>
                   <th scope="col" className="px-6 py-3 font-bold">
                     Assigned advisor
+                  </th>
+                  <th scope="col" className="px-6 py-3 font-bold">
+                    Last updated
                   </th>
                   <th scope="col" className="px-6 py-3 text-right font-bold">
                     Actions
@@ -203,6 +207,11 @@ export default async function AdminDashboardPage({
                         ? (advisorLabels.get(client.advisor_id) ??
                           "Advisor profile")
                         : "Unassigned"}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-black/60">
+                      <time dateTime={client.updated_at}>
+                        {formatPortalDateTime(client.updated_at)}
+                      </time>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link
