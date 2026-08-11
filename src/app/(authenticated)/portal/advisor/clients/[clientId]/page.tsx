@@ -23,7 +23,9 @@ type AdvisorClientPageProps = {
     inputsSaved?: string;
     narrativeGenerated?: string;
     narrativeSaved?: string;
+    published?: string;
     saved?: string;
+    unpublished?: string;
   }>;
 };
 
@@ -144,6 +146,7 @@ export default async function AdvisorClientPage({
 
       <ClientNarrativeSection
         clientId={client.id}
+        clientIsActive={client.status === "active"}
         feedback={
           query.narrativeGenerated === "1"
             ? "generated"
@@ -152,6 +155,13 @@ export default async function AdvisorClientPage({
               : undefined
         }
         hasStructuredInputs={Boolean(initialInputs) && !inputsUnavailable}
+        publicationFeedback={
+          query.published === "1"
+            ? "published"
+            : query.unpublished === "1"
+              ? "unpublished"
+              : undefined
+        }
       />
 
       <section className="mt-6 rounded-xl border border-brand-red/20 bg-white p-5 sm:p-7">

@@ -3,7 +3,13 @@ import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
-  return updateSession(request);
+  const response = await updateSession(request);
+
+  if (request.nextUrl.pathname.startsWith("/client/")) {
+    response.headers.set("Cache-Control", "private, no-store");
+  }
+
+  return response;
 }
 
 export const config = {

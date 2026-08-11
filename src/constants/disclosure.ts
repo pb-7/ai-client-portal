@@ -1,0 +1,2 @@
+export const REQUIRED_DISCLOSURE =
+  "This material is provided for informational purposes only and does not constitute investment, tax, or legal advice. Figures shown are illustrative and based on information believed to be accurate as of the meeting date. Investing involves risk, including the possible loss of principal. Past performance is not a guarantee of future results. This page is intended solely for the named client and should not be forwarded or redistributed. Fake Financial Firm — Confidential.";

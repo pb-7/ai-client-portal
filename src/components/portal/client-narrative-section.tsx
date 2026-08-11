@@ -2,6 +2,11 @@ import {
   generateNarrativeDraft,
   saveReviewedNarrative,
 } from "@/app/(authenticated)/portal/narrative-actions";
+import {
+  publishClientPage,
+  unpublishClientPage,
+} from "@/app/(authenticated)/portal/publication-actions";
+import { ClientPagePublicationForm } from "@/components/portal/client-page-publication-form";
 import { GenerateNarrativeForm } from "@/components/portal/generate-narrative-form";
 import { NarrativeReviewForm } from "@/components/portal/narrative-review-form";
 import { createClient } from "@/lib/supabase/server";
@@ -12,11 +17,14 @@ import type {
   NarrativeField,
   NarrativeVersionSummary,
 } from "@/types/narrative";
+import type { ClientPagePublication } from "@/types/publication";
 
 type ClientNarrativeSectionProps = {
   clientId: string;
+  clientIsActive: boolean;
   feedback?: "generated" | "saved";
   hasStructuredInputs: boolean;
+  publicationFeedback?: "published" | "unpublished";
 };
 
 type ActorProfile = {
@@ -60,8 +68,10 @@ function versionStatusLabel(status: NarrativeVersionSummary["status"]) {
 
 export async function ClientNarrativeSection({
   clientId,
+  clientIsActive,
   feedback,
   hasStructuredInputs,
+  publicationFeedback,
 }: ClientNarrativeSectionProps) {
   const supabase = await createClient();
   const narrativeResult = await supabase
@@ -75,6 +85,7 @@ export async function ClientNarrativeSection({
       content: unknown;
       created_by: string | null;
       created_at: string;
+      id: string;
       model_name: string | null;
       model_provider: string | null;
       prompt_version: string | null;
@@ -90,7 +101,7 @@ export async function ClientNarrativeSection({
     versionsResult = await supabase
       .from("narrative_versions")
       .select(
-        "content, created_at, created_by, model_name, model_provider, prompt_version, reviewed_at, reviewed_by, status, version_number",
+        "id, content, created_at, created_by, model_name, model_provider, prompt_version, reviewed_at, reviewed_by, status, version_number",
       )
       .eq("narrative_id", narrativeResult.data.id)
       .order("version_number", { ascending: false });
@@ -141,6 +152,37 @@ export async function ClientNarrativeSection({
   }));
   const generateAction = generateNarrativeDraft.bind(null, clientId);
   const saveAction = saveReviewedNarrative.bind(null, clientId);
+  const publishAction = publishClientPage.bind(null, clientId);
+  const unpublishAction = unpublishClientPage.bind(null, clientId);
+  const publicationResult = clientIsActive
+    ? await supabase
+        .from("client_page_publications")
+        .select(
+          "narrative_version_id, published, published_at, slug, updated_at",
+        )
+        .eq("client_id", clientId)
+        .maybeSingle()
+    : { data: null, error: null };
+  const publication: ClientPagePublication | null = publicationResult.data
+    ? {
+        narrativeVersionId: publicationResult.data.narrative_version_id,
+        published: publicationResult.data.published,
+        publishedAt: publicationResult.data.published_at,
+        slug: publicationResult.data.slug,
+        updatedAt: publicationResult.data.updated_at,
+      }
+    : null;
+  const reviewedVersions = versions
+    .filter(
+      (version) =>
+        version.status === "reviewed" &&
+        Boolean(parseStoredNarrative(version.content)),
+    )
+    .map((version) => ({
+      createdAt: version.created_at,
+      id: version.id,
+      label: `Version ${version.version_number} · ${formatPortalDateTime(version.created_at)}`,
+    }));
 
   return (
     <section className="mt-6 rounded-xl border border-black/10 bg-white p-5 shadow-[0_12px_35px_rgba(26,26,26,0.04)] sm:p-7">
@@ -268,6 +310,39 @@ export async function ClientNarrativeSection({
           </ol>
         </div>
       ) : null}
+
+      <div className="mt-8 border-t border-black/10 pt-6">
+        <h3 className="text-base font-bold">Publish client page</h3>
+        <p className="mt-1 max-w-2xl text-sm leading-6 text-black/50">
+          Publish a password-protected page pinned to one reviewed narrative version. Branding, factual values, and disclosure remain deterministic.
+        </p>
+        {publicationFeedback ? (
+          <p
+            role="status"
+            className="mt-5 rounded-lg border border-emerald-700/15 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+          >
+            {publicationFeedback === "published"
+              ? "Client page published successfully."
+              : "Client page unpublished successfully."}
+          </p>
+        ) : null}
+        {!clientIsActive ? (
+          <p className="mt-5 text-sm text-black/50">
+            Archived clients cannot be published. Change the client status to active first.
+          </p>
+        ) : publicationResult.error ? (
+          <p role="alert" className="mt-5 text-sm text-brand-red">
+            Publication settings could not be loaded safely. Please try again.
+          </p>
+        ) : (
+          <ClientPagePublicationForm
+            publication={publication}
+            publishAction={publishAction}
+            reviewedVersions={reviewedVersions}
+            unpublishAction={unpublishAction}
+          />
+        )}
+      </div>
     </section>
   );
 }

@@ -61,7 +61,7 @@ Access is derived from the authenticated profile and the client row's advisor as
 | `client_inputs` | Structured fictional inputs used to generate a client narrative. |
 | `narratives` | Narrative lifecycle record, including draft/published status and publication metadata. |
 | `narrative_versions` | Immutable generated narrative versions, structured JSON output, model metadata, and review metadata. |
-| `client_page_access` | Client-specific page identifier and password-gate state, separate from internal Supabase Auth accounts. |
+| `client_page_publications` | Client-specific publication, pinned reviewed narrative version, and password-gate state, separate from internal Supabase Auth accounts. |
 
 Authentication credentials for admins and advisors remain in Supabase Auth and are not duplicated in application tables. Clients have no Auth users. All client-owned tables include a non-null client identifier. The client-page access mechanism is modeled separately from application authentication and must store no plaintext page password. A production implementation should also include append-only audit events; for the assessment, lifecycle timestamps and reviewer/publisher identifiers provide the minimum traceability.
 
@@ -126,6 +126,22 @@ The final client page combines factual database values, the approved Claude narr
 - Use secure Vercel environment variables for production secrets and local environment files for development secrets.
 - Treat MFA as a future production enhancement outside the assessment MVP.
 - Use separate local and production data/configuration. Add a fully isolated staging environment for a real production deployment.
+
+### Client-page access boundary
+
+Client-page passwords are hashed with bcrypt and plaintext passwords are never
+stored. A successful password check creates a short-lived, signed, HttpOnly
+cookie scoped to that client URL. Source tables remain unavailable to anonymous
+users; server code holding a separate capability calls one security-definer
+database function that returns only the active, pinned publication. No
+service-role credential is used.
+
+The assessment uses a best-effort, per-instance password-attempt limiter so it
+works on free-tier serverless hosting. It is an abuse-protection hook, not a
+globally consistent rate limiter. A production system handling real financial
+data should use a durable shared rate-limit store, monitored lockouts, stronger
+access auditing, secret rotation procedures, and a more robust authenticated
+delivery channel.
 
 ## Implementation sequence
 
