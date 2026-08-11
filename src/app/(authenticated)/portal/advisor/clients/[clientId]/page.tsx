@@ -5,17 +5,20 @@ import {
   softDeleteClient,
   updateClient,
 } from "@/app/(authenticated)/portal/client-actions";
+import { saveClientInputs } from "@/app/(authenticated)/portal/client-input-actions";
+import { ClientFinancialInputForm } from "@/components/portal/client-financial-input-form";
 import { ClientRecordForm } from "@/components/portal/client-record-form";
 import { SoftDeleteClientForm } from "@/components/portal/soft-delete-client-form";
 import { StatusBadge } from "@/components/portal/status-badge";
 import { requireRole } from "@/lib/auth/session";
 import { formatPortalDate } from "@/lib/format/date";
 import { isUuid } from "@/lib/validation/client";
+import { parseStoredClientInputs } from "@/lib/validation/client-inputs";
 import type { ClientRecord } from "@/types/portal";
 
 type AdvisorClientPageProps = {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ inputsSaved?: string; saved?: string }>;
 };
 
 export default async function AdvisorClientPage({
@@ -29,22 +32,36 @@ export default async function AdvisorClientPage({
   }
 
   const { profile, supabase } = await requireRole("advisor");
-  const { data, error } = await supabase
-    .from("clients")
-    .select("id, name, status, advisor_id, created_at, updated_at")
-    .eq("id", clientId)
-    .eq("advisor_id", profile.id)
-    .is("deleted_at", null)
-    .maybeSingle();
+  const [clientResult, inputResult] = await Promise.all([
+    supabase
+      .from("clients")
+      .select("id, name, status, advisor_id, created_at, updated_at")
+      .eq("id", clientId)
+      .eq("advisor_id", profile.id)
+      .is("deleted_at", null)
+      .maybeSingle(),
+    supabase
+      .from("client_inputs")
+      .select("data")
+      .eq("client_id", clientId)
+      .maybeSingle(),
+  ]);
 
-  if (error || !data) {
+  if (clientResult.error || !clientResult.data) {
     notFound();
   }
 
-  const client = data as ClientRecord;
+  const client = clientResult.data as ClientRecord;
   const deleteAction = softDeleteClient.bind(null, client.id);
+  const inputAction = saveClientInputs.bind(null, client.id);
   const updateAction = updateClient.bind(null, client.id);
   const query = await searchParams;
+  const initialInputs = inputResult.data
+    ? parseStoredClientInputs(inputResult.data.data)
+    : undefined;
+  const inputsUnavailable = Boolean(
+    inputResult.error || (inputResult.data && !initialInputs),
+  );
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -73,12 +90,14 @@ export default async function AdvisorClientPage({
         />
       </div>
 
-      {query.saved === "1" ? (
+      {query.saved === "1" || query.inputsSaved === "1" ? (
         <p
           role="status"
           className="mt-7 rounded-lg border border-emerald-700/15 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
         >
-          Client changes saved.
+          {query.inputsSaved === "1"
+            ? "Structured financial inputs saved."
+            : "Client changes saved."}
         </p>
       ) : null}
 
@@ -95,6 +114,25 @@ export default async function AdvisorClientPage({
             initialStatus={client.status}
             submitLabel="Save changes"
           />
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-xl border border-black/10 bg-white p-5 shadow-[0_12px_35px_rgba(26,26,26,0.04)] sm:p-7">
+        <h2 className="text-xl font-bold">Structured financial inputs</h2>
+        <p className="mt-1 text-sm leading-6 text-black/55">
+          Save the factual client data that will support the future narrative workflow.
+        </p>
+        <div className="mt-6">
+          {inputsUnavailable ? (
+            <p role="alert" className="text-sm text-brand-red">
+              Financial inputs could not be loaded safely. Please try again.
+            </p>
+          ) : (
+            <ClientFinancialInputForm
+              action={inputAction}
+              initialInputs={initialInputs ?? undefined}
+            />
+          )}
         </div>
       </section>
 
