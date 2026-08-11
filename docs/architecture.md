@@ -57,7 +57,7 @@ Access is derived from the authenticated profile and the client row's advisor as
 | Table | Purpose |
 | --- | --- |
 | `profiles` | Internal application profile linked one-to-one with a Supabase Auth user; stores the admin/advisor role and disabled status. |
-| `clients` | Client record, non-sensitive fictional assessment details, and the required single advisor assignment. |
+| `clients` | Client record, non-sensitive fictional assessment details, required single advisor assignment, and recoverable soft-deletion metadata. |
 | `client_inputs` | Structured fictional inputs used to generate a client narrative. |
 | `narratives` | Narrative lifecycle record, including draft/published status and publication metadata. |
 | `narrative_versions` | Immutable generated narrative versions, structured JSON output, model metadata, and review metadata. |
@@ -80,6 +80,21 @@ The original migration implements the superseded admin/client role and membershi
 - Client-page access uses a separate server-validated password gate and does not grant a Supabase authenticated application session. Its password must never be stored in plaintext or exposed to browser code.
 
 Route protection and server-side role checks improve usability and defense in depth, but they do not replace RLS.
+
+## Soft deletion and retention
+
+Client deletion is recoverable: `deleted_at` records when a client was removed
+and `deleted_by` records the authenticated profile responsible. Normal portal
+queries exclude deleted clients, and advisor RLS prevents access to a deleted
+client or its related inputs and narratives. The underlying `client_inputs`,
+`narratives`, and `narrative_versions` rows remain intact so an admin restore
+can return the complete client record to normal use.
+
+Admins can restore clients from Recently Deleted for seven days. After seven
+days, a client becomes eligible for permanent deletion, but this assessment does
+not automatically purge records. A production implementation should use a
+scheduled, audited retention job with explicit failure monitoring and recovery
+procedures.
 
 ## AI generation lifecycle
 
@@ -104,6 +119,7 @@ The final client page combines factual database values, the approved Claude narr
 - Validate all mutations and AI inputs/outputs against explicit schemas.
 - Derive identity, role, and client assignment from the authenticated session and database; never trust browser-supplied authorization claims.
 - Prevent disabled accounts from accessing data even with an existing session.
+- Use soft deletion for client records and preserve related data throughout the seven-day recovery period.
 - Require explicit human review and preview before narrative publication.
 - Keep the client-page password/access mechanism separate from Supabase authentication, validate it server-side, and store only a strong password hash.
 - Avoid placing client inputs, generated narratives, credentials, or tokens in application logs.

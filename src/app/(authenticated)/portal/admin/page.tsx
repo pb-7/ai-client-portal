@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { StatusBadge } from "@/components/portal/status-badge";
 import { SummaryCard } from "@/components/portal/summary-card";
 import { requireRole } from "@/lib/auth/session";
@@ -7,8 +9,15 @@ function getAdvisorDisplayName(advisor: AdvisorProfile) {
   return advisor.display_name?.trim() || "Unnamed advisor";
 }
 
-export default async function AdminDashboardPage() {
+type AdminDashboardPageProps = {
+  searchParams: Promise<{ deleted?: string }>;
+};
+
+export default async function AdminDashboardPage({
+  searchParams,
+}: AdminDashboardPageProps) {
   const { supabase } = await requireRole("admin");
+  const query = await searchParams;
   const [advisorResult, clientResult] = await Promise.all([
     supabase
       .from("profiles")
@@ -18,6 +27,7 @@ export default async function AdminDashboardPage() {
     supabase
       .from("clients")
       .select("id, name, status, advisor_id, updated_at")
+      .is("deleted_at", null)
       .order("name", { ascending: true }),
   ]);
 
@@ -46,8 +56,22 @@ export default async function AdminDashboardPage() {
             book of fictional assessment clients.
           </p>
         </div>
-        <p className="text-sm font-bold text-black/45">Read-only foundation</p>
+        <Link
+          href="/portal/admin/clients/recently-deleted"
+          className="text-sm font-bold text-brand-red underline-offset-4 hover:underline"
+        >
+          Recently Deleted
+        </Link>
       </div>
+
+      {query.deleted === "1" ? (
+        <p
+          role="status"
+          className="mt-7 rounded-lg border border-emerald-700/15 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+        >
+          Client moved to Recently Deleted.
+        </p>
+      ) : null}
 
       {hasDataError ? (
         <div
@@ -141,13 +165,13 @@ export default async function AdminDashboardPage() {
             </p>
           </div>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-black/40">
-            Reassignment coming later
+            Open a client to edit or reassign
           </p>
         </div>
 
         {clients.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
+            <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="bg-black/[0.025] text-xs uppercase tracking-[0.12em] text-black/45">
                 <tr>
                   <th scope="col" className="px-6 py-3 font-bold">
@@ -158,6 +182,9 @@ export default async function AdminDashboardPage() {
                   </th>
                   <th scope="col" className="px-6 py-3 font-bold">
                     Assigned advisor
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right font-bold">
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -176,6 +203,14 @@ export default async function AdminDashboardPage() {
                         ? (advisorLabels.get(client.advisor_id) ??
                           "Advisor profile")
                         : "Unassigned"}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link
+                        href={`/portal/admin/clients/${client.id}`}
+                        className="font-bold text-brand-red underline-offset-4 hover:underline"
+                      >
+                        View / Edit
+                      </Link>
                     </td>
                   </tr>
                 ))}

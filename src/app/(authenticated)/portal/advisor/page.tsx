@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { StatusBadge } from "@/components/portal/status-badge";
 import { SummaryCard } from "@/components/portal/summary-card";
 import { requireRole } from "@/lib/auth/session";
@@ -11,12 +13,20 @@ function formatUpdatedDate(value: string) {
   }).format(new Date(value));
 }
 
-export default async function AdvisorDashboardPage() {
+type AdvisorDashboardPageProps = {
+  searchParams: Promise<{ deleted?: string }>;
+};
+
+export default async function AdvisorDashboardPage({
+  searchParams,
+}: AdvisorDashboardPageProps) {
   const { profile, supabase } = await requireRole("advisor");
+  const query = await searchParams;
   const { data, error } = await supabase
     .from("clients")
     .select("id, name, status, advisor_id, updated_at")
     .eq("advisor_id", profile.id)
+    .is("deleted_at", null)
     .order("name", { ascending: true });
   const clients = (data ?? []) as ClientSummary[];
   const activeClientCount = clients.filter(
@@ -39,15 +49,23 @@ export default async function AdvisorDashboardPage() {
             profile.
           </p>
         </div>
-        <button
-          type="button"
-          disabled
-          title="Client creation will be available in Ticket 6"
-          className="inline-flex h-11 items-center justify-center rounded-md bg-brand-red px-5 text-sm font-bold text-white opacity-55 disabled:cursor-not-allowed"
+        <Link
+          href="/portal/advisor/clients/new"
+          className="inline-flex h-11 items-center justify-center rounded-md bg-brand-red px-5 text-sm font-bold text-white transition hover:bg-[#a90d27] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-red"
         >
           Create Client
-        </button>
+        </Link>
       </div>
+
+      {query.deleted === "1" ? (
+        <p
+          role="status"
+          className="mt-7 rounded-lg border border-emerald-700/15 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+        >
+          Client moved to Recently Deleted. An administrator can restore it
+          within seven days.
+        </p>
+      ) : null}
 
       {error ? (
         <div
@@ -104,8 +122,13 @@ export default async function AdvisorDashboardPage() {
                 <p className="mt-2 text-sm text-black/50">
                   Updated {formatUpdatedDate(client.updated_at)}
                 </p>
-                <div className="mt-5 border-t border-black/8 pt-4 text-sm font-bold text-black/40">
-                  Client details coming in Ticket 6
+                <div className="mt-5 border-t border-black/8 pt-4">
+                  <Link
+                    href={`/portal/advisor/clients/${client.id}`}
+                    className="inline-flex text-sm font-bold text-brand-red underline-offset-4 hover:underline"
+                  >
+                    View / Edit
+                  </Link>
                 </div>
               </article>
             ))}
@@ -117,9 +140,8 @@ export default async function AdvisorDashboardPage() {
             </span>
             <h3 className="mt-5 text-lg font-bold">No clients assigned yet</h3>
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-black/55">
-              Your client list will appear here after an administrator assigns
-              records to your advisor profile. Client creation will be enabled
-              in the next ticket.
+              Create a client record to begin, or ask an administrator to
+              assign an existing record to your advisor profile.
             </p>
           </div>
         )}
