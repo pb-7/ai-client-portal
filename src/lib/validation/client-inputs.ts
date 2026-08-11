@@ -243,7 +243,8 @@ export function parseStoredClientInputs(value: unknown): ClientFinancialInputs |
     typeof number === "number" &&
     Number.isFinite(number) &&
     number >= 0 &&
-    number <= maximum;
+    number <= maximum &&
+    Number.isInteger(number * 100);
   const validAge = (age: unknown, minimum: number, maximum: number) =>
     typeof age === "number" &&
     Number.isInteger(age) &&

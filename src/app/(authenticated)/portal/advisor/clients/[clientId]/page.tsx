@@ -7,6 +7,7 @@ import {
 } from "@/app/(authenticated)/portal/client-actions";
 import { saveClientInputs } from "@/app/(authenticated)/portal/client-input-actions";
 import { ClientFinancialInputForm } from "@/components/portal/client-financial-input-form";
+import { ClientNarrativeSection } from "@/components/portal/client-narrative-section";
 import { ClientRecordForm } from "@/components/portal/client-record-form";
 import { SoftDeleteClientForm } from "@/components/portal/soft-delete-client-form";
 import { StatusBadge } from "@/components/portal/status-badge";
@@ -18,7 +19,12 @@ import type { ClientRecord } from "@/types/portal";
 
 type AdvisorClientPageProps = {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ inputsSaved?: string; saved?: string }>;
+  searchParams: Promise<{
+    inputsSaved?: string;
+    narrativeGenerated?: string;
+    narrativeSaved?: string;
+    saved?: string;
+  }>;
 };
 
 export default async function AdvisorClientPage({
@@ -135,6 +141,18 @@ export default async function AdvisorClientPage({
           )}
         </div>
       </section>
+
+      <ClientNarrativeSection
+        clientId={client.id}
+        feedback={
+          query.narrativeGenerated === "1"
+            ? "generated"
+            : query.narrativeSaved === "1"
+              ? "saved"
+              : undefined
+        }
+        hasStructuredInputs={Boolean(initialInputs) && !inputsUnavailable}
+      />
 
       <section className="mt-6 rounded-xl border border-brand-red/20 bg-white p-5 sm:p-7">
         <h2 className="text-xl font-bold text-brand-red">Delete client</h2>
