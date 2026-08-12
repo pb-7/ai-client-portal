@@ -2,8 +2,7 @@
 
 ## Project Overview
 
-This project is an AI client portal built for the Fake Financial Firm
-assessment. Advisors enter structured client data, Claude generates personalized
+This project is an AI client portal built for Fake Financial Firm. Advisors enter structured client data, Claude generates personalized
 narratives, advisors review the output, and an approved client page is published
 behind a password-protected link.
 
