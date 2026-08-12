@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>John & Jane Doe | Fake Financial Firm</title>
+
+  <style>
+    :root {
+      --brand-red: #C8102E;
+      --brand-black: #1A1A1A;
+      --white: #FFFFFF;
+      --background: #F7F7F7;
+      --border: #E5E5E5;
+      --muted: #666666;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--brand-black);
+      background: var(--background);
+      line-height: 1.6;
+    }
+
+    .top-bar {
+      height: 6px;
+      background: var(--brand-red);
+    }
+
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand span {
+      color: var(--brand-red);
+    }
+
+    .confidential {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--brand-red);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 42px 28px 56px;
+    }
+
+    .hero {
+      margin-bottom: 32px;
+    }
+
+    .eyebrow {
+      color: var(--brand-red);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.3px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 48px);
+      line-height: 1.1;
+      margin: 0 0 12px;
+      letter-spacing: -1px;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin: 30px 0;
+    }
+
+    .summary-card,
+    .section-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .summary-card {
+      padding: 20px;
+    }
+
+    .summary-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+
+    .summary-value {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 22px;
+      margin-top: 22px;
+    }
+
+    .section-card {
+      padding: 26px;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      font-size: 21px;
+      margin: 0 0 14px;
+    }
+
+    h2::before {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 20px;
+      margin-right: 10px;
+      background: var(--brand-red);
+      vertical-align: -3px;
+      border-radius: 3px;
+    }
+
+    .allocation-row {
+      margin: 16px 0;
+    }
+
+    .allocation-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 7px;
+      font-size: 14px;
+    }
+
+    .allocation-track {
+      width: 100%;
+      height: 8px;
+      background: #ECECEC;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .allocation-fill {
+      height: 100%;
+      background: var(--brand-red);
+      border-radius: 10px;
+    }
+
+    .goals {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .goals li {
+      margin-bottom: 8px;
+    }
+
+    .next-step {
+      background: var(--brand-black);
+      color: var(--white);
+      border-radius: 12px;
+      padding: 28px;
+    }
+
+    .next-step h2 {
+      margin-top: 0;
+      color: var(--white);
+    }
+
+    .next-step h2::before {
+      background: var(--brand-red);
+    }
+
+    .next-step p {
+      color: #E6E6E6;
+      margin-bottom: 0;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--white);
+    }
+
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .disclosure-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .disclosure {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #555555;
+    }
+
+    @media (max-width: 850px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .header-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 30px 18px 44px;
+      }
+
+      .header-inner,
+      .footer-inner {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="top-bar"></div>
+
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        Fake Financial <span>Firm</span>
+      </div>
+
+      <div class="confidential">
+        Confidential Client Review
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow">Mid-Year Client Review</div>
+
+      <h1>John &amp; Jane Doe</h1>
+
+      <p>
+        Prepared by Sample Advisor for a mid-year review focused on progress
+        toward retirement and a discussion about consolidating outside assets.
+      </p>
+    </section>
+
+    <section class="summary-grid" aria-label="Household summary">
+      <article class="summary-card">
+        <div class="summary-label">Current Ages</div>
+        <div class="summary-value">54 &amp; 52</div>
+      </article>
+
+      <article class="summary-card">
+        <div class="summary-label">Retirement Target</div>
+        <div class="summary-value">Age 62</div>
+      </article>
+
+      <article class="summary-card">
+        <div class="summary-label">Assets With Firm</div>
+        <div class="summary-value">$1.25M</div>
+      </article>
+
+      <article class="summary-card">
+        <div class="summary-label">Outside Assets</div>
+        <div class="summary-value">~$480K</div>
+      </article>
+    </section>
+
+    <div class="content-grid">
+      <div>
+        <section class="section-card">
+          <h2>Retirement Progress</h2>
+
+          <p>
+            John and Jane are working toward a shared retirement target of
+            age 62. Their current review provides an opportunity to evaluate
+            how their existing investable assets, outside accounts, college
+            funding goals, and moderate-growth risk profile fit together as
+            they move closer to that target.
+          </p>
+        </section>
+
+        <section class="section-card">
+          <h2>Consolidating Outside Assets</h2>
+
+          <p>
+            Approximately $480,000 is currently held outside Fake Financial
+            Firm through an old 401(k) and brokerage assets. Consolidating
+            those accounts could make the household's overall allocation
+            easier to view and coordinate within one financial picture.
+          </p>
+
+          <p>
+            Any consolidation decision should be reviewed carefully with the
+            advisor, including account features, costs, tax considerations,
+            available investment choices, and the household's broader goals.
+          </p>
+        </section>
+
+        <section class="section-card">
+          <h2>Primary Goals</h2>
+
+          <ul class="goals">
+            <li>Retire at age 62.</li>
+            <li>
+              Fund approximately $90,000 of remaining college costs for two
+              children over the next four years.
+            </li>
+            <li>Leave a modest legacy.</li>
+          </ul>
+        </section>
+      </div>
+
+      <aside>
+        <section class="section-card">
+          <h2>Current Portfolio</h2>
+
+          <p>
+            The portfolio currently held with Fake Financial Firm is positioned
+            around a moderate-growth risk profile.
+          </p>
+
+          <div class="allocation-row">
+            <div class="allocation-heading">
+              <span>US Equity</span>
+              <strong>45%</strong>
+            </div>
+            <div class="allocation-track">
+              <div class="allocation-fill" style="width: 45%;"></div>
+            </div>
+          </div>
+
+          <div class="allocation-row">
+            <div class="allocation-heading">
+              <span>International Equity</span>
+              <strong>18%</strong>
+            </div>
+            <div class="allocation-track">
+              <div class="allocation-fill" style="width: 18%;"></div>
+            </div>
+          </div>
+
+          <div class="allocation-row">
+            <div class="allocation-heading">
+              <span>Fixed Income</span>
+              <strong>27%</strong>
+            </div>
+            <div class="allocation-track">
+              <div class="allocation-fill" style="width: 27%;"></div>
+            </div>
+          </div>
+
+          <div class="allocation-row">
+            <div class="allocation-heading">
+              <span>Cash / Short-Term</span>
+              <strong>6%</strong>
+            </div>
+            <div class="allocation-track">
+              <div class="allocation-fill" style="width: 6%;"></div>
+            </div>
+          </div>
+
+          <div class="allocation-row">
+            <div class="allocation-heading">
+              <span>Alternatives</span>
+              <strong>4%</strong>
+            </div>
+            <div class="allocation-track">
+              <div class="allocation-fill" style="width: 4%;"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-card">
+          <h2>Household Snapshot</h2>
+
+          <p><strong>Residence:</strong> Missouri</p>
+          <p><strong>Risk profile:</strong> Moderate growth</p>
+          <p><strong>Advisor:</strong> Sample Advisor</p>
+        </section>
+      </aside>
+    </div>
+
+    <section class="next-step">
+      <h2>Next Step</h2>
+
+      <p>
+        Schedule a follow-up conversation with Sample Advisor to review
+        retirement progress, discuss the outside accounts in greater detail,
+        and determine whether consolidation is appropriate for John and Jane's
+        broader financial goals.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="disclosure-title">Important Disclosure</div>
+
+      <p class="disclosure">
+        This material is provided for informational purposes only and does not constitute investment, tax, or legal advice. Figures shown are illustrative and based on information believed to be accurate as of the meeting date. Investing involves risk, including the possible loss of principal. Past performance is not a guarantee of future results. This page is intended solely for the named client and should not be forwarded or redistributed. Fake Financial Firm — Confidential.
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
